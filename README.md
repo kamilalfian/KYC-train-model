@@ -1,3 +1,6 @@
+# NOTE
+I cloned this from the original repo at https://github.com/getcontrol/KYC-train-model, so credit goes to @getcontrol. I simply migrated the tensorflow version to 2.x.x.
+
 # Train Tensorflow Model for Tensorflow Verification
 
 This repo contains the Python code to produce the dataset and train the Tensorflow model for use in [KYC-tensorflow](https://github.com/getcontrol/KYC-tensorflow). This training model transfers learning from a previously trained model mobilenet_v2.
