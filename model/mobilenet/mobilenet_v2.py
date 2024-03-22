@@ -28,11 +28,11 @@ import copy
 import functools
 
 import tensorflow as tf
-
+import tf_slim as slim
 from model.mobilenet import conv_blocks as ops
 from model.mobilenet import mobilenet as lib
 
-slim = tf.contrib.slim
+
 op = lib.op
 
 expand_input = ops.expand_input_by_factor

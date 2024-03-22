@@ -2,7 +2,7 @@ import collections
 import six
 import tensorflow as tf
 
-FLAGS = tf.app.flags.FLAGS
+FLAGS = tf.compat.v1.app.flags.FLAGS
 
 class ImageReader(object):
   """Helper class that provides TensorFlow image coding utilities."""
@@ -14,9 +14,9 @@ class ImageReader(object):
       channels: Image channels.
     """
     with tf.Graph().as_default():
-      self._decode_data = tf.placeholder(dtype=tf.string)
+      self._decode_data = tf.compat.v1.placeholder(dtype=tf.string)
       self._image_format = image_format
-      self._session = tf.Session()
+      self._session = tf.compat.v1.Session()
 
       self._decode = tf.image.decode_image(self._decode_data,channels=channels)
 
@@ -59,7 +59,7 @@ def _int64_list_feature(values):
   Returns:
     A TF-Feature.
   """
-  if not isinstance(values, collections.Iterable):
+  if not isinstance(values, collections.abc.Iterable):
     values = [values]
 
   return tf.train.Feature(int64_list=tf.train.Int64List(value=values))

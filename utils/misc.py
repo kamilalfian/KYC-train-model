@@ -13,22 +13,22 @@ def get_init_fn_for_scaffold(pretrained_path, model_dir, keywords=None, exclude_
         callback function to init the graph
     """
     if tf.train.latest_checkpoint(model_dir):
-        tf.logging.info("Ignore pretrained path because a checkpoint file already exists")
+        tf.compat.v1.logging.info("Ignore pretrained path because a checkpoint file already exists")
         return None
 
-    variables_to_restore = tf.trainable_variables()
+    variables_to_restore = tf.compat.v1.trainable_variables()
     if keywords:
         variables_to_restore = [_var for _var in variables_to_restore if _var.name.startswith(keywords)]
 
-    if tf.gfile.IsDirectory(pretrained_path):
+    if tf.io.gfile.isdir(pretrained_path):
         pretrained_path = tf.train.latest_checkpoint(pretrained_path)
     
-    tf.logging.info("Fine tuning from %s" %(pretrained_path))
+    tf.compat.v1.logging.info("Fine tuning from %s" %(pretrained_path))
 
     if not variables_to_restore:
         raise ValueError("variables to restore cannot be empty.")
    
-    saver = tf.train.Saver(variables_to_restore, reshape=False)
+    saver = tf.compat.v1.train.Saver(variables_to_restore, reshape=False)
     saver.build()
 
     print ("pretrained_path:{}".format(pretrained_path))

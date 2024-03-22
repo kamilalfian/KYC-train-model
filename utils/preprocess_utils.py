@@ -26,10 +26,10 @@ def get_bbox_from_points(points_tensor):
         bbox. shape of [4,], represents. [center_x, center_y, width, height]
     """
 
-    center_x = tf.reduce_mean(points_tensor[:,0])
-    center_y = tf.reduce_mean(points_tensor[:,1])
-    width  = tf.reduce_max(points_tensor[:,0]) - tf.reduce_min(points_tensor[:,0])
-    height = tf.reduce_max(points_tensor[:,1]) - tf.reduce_min(points_tensor[:,1])
+    center_x = tf.reduce_mean(input_tensor=points_tensor[:,0])
+    center_y = tf.reduce_mean(input_tensor=points_tensor[:,1])
+    width  = tf.reduce_max(input_tensor=points_tensor[:,0]) - tf.reduce_min(input_tensor=points_tensor[:,0])
+    height = tf.reduce_max(input_tensor=points_tensor[:,1]) - tf.reduce_min(input_tensor=points_tensor[:,1])
 
     return tf.stack([center_x, center_y, width, height])
 
@@ -47,11 +47,11 @@ def random_left_right_flip(image_tensor, points_tensor, image_width, image_heigh
         image_tensor_output: same format as image_tensor
         points_tensor_output: same format as points_tensor
     """
-    random_value = tf.random_uniform([])
+    random_value = tf.random.uniform([])
     is_flipped = tf.less_equal(random_value, prob)
     
     def flip():
-        image_tensor_reversed = tf.reverse_v2(image_tensor, [1])
+        image_tensor_reversed = tf.reverse(image_tensor, [1])
 
         x_coords = image_width - points_tensor[:,0]
         y_coords = points_tensor[:,1]
@@ -64,7 +64,7 @@ def random_left_right_flip(image_tensor, points_tensor, image_width, image_heigh
 
         return image_tensor_reversed, points_reversed
 
-    return tf.cond(is_flipped, flip, lambda: (image_tensor, points_tensor))
+    return tf.cond(pred=is_flipped, true_fn=flip, false_fn=lambda: (image_tensor, points_tensor))
 
 
 def random_up_down_flip(image_tensor, points_tensor, image_width, image_height, prob=.2):
@@ -82,11 +82,11 @@ def random_up_down_flip(image_tensor, points_tensor, image_width, image_height, 
         image_tensor_output: same format as image_tensor
         points_tensor_output: same format as points_tensor
     """
-    random_value = tf.random_uniform([])
+    random_value = tf.random.uniform([])
     is_flipped = tf.less_equal(random_value, prob)
     
     def flip():
-        image_tensor_reversed = tf.reverse_v2(image_tensor, [0])
+        image_tensor_reversed = tf.reverse(image_tensor, [0])
 
         x_coords = points_tensor[:,0]
         y_coords = image_height - points_tensor[:,1]
@@ -99,4 +99,4 @@ def random_up_down_flip(image_tensor, points_tensor, image_width, image_height, 
 
         return image_tensor_reversed, points_reversed
 
-    return tf.cond(is_flipped, flip, lambda: (image_tensor, points_tensor))
+    return tf.cond(pred=is_flipped, true_fn=flip, false_fn=lambda: (image_tensor, points_tensor))

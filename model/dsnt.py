@@ -19,19 +19,19 @@ def dsnt(inputs, method='softmax'):
     # Rectify and reshape inputs
     norm_heatmap = _normalise_heatmap(inputs, method)
     
-    batch_count = tf.shape(norm_heatmap)[0]
-    height = tf.shape(norm_heatmap)[1]
-    width = tf.shape(norm_heatmap)[2]
+    batch_count = tf.shape(input=norm_heatmap)[0]
+    height = tf.shape(input=norm_heatmap)[1]
+    width = tf.shape(input=norm_heatmap)[2]
 
     # Build the DSNT x, y matrices
     dsnt_x = tf.tile([[(2 * tf.range(1, width+1) - (width + 1)) / width]], [batch_count, height, 1])
     dsnt_x = tf.cast(dsnt_x, tf.float32)
     dsnt_y = tf.tile([[(2 * tf.range(1, height+1) - (height + 1)) / height]], [batch_count, width, 1])
-    dsnt_y = tf.cast(tf.transpose(dsnt_y, perm=[0, 2, 1]), tf.float32)
+    dsnt_y = tf.cast(tf.transpose(a=dsnt_y, perm=[0, 2, 1]), tf.float32)
 
     # Compute the Frobenius inner product
-    outputs_x = tf.reduce_sum(tf.multiply(norm_heatmap, dsnt_x), axis=[1, 2])
-    outputs_y = tf.reduce_sum(tf.multiply(norm_heatmap, dsnt_y), axis=[1, 2])
+    outputs_x = tf.reduce_sum(input_tensor=tf.multiply(norm_heatmap, dsnt_x), axis=[1, 2])
+    outputs_y = tf.reduce_sum(input_tensor=tf.multiply(norm_heatmap, dsnt_y), axis=[1, 2])
 
     # Zip into [x, y] pairs
     coords_zipped = tf.stack([outputs_x, outputs_y], axis=1)
@@ -45,9 +45,9 @@ def js_reg_loss(heatmaps, centres, fwhm=1):
         centres - Centres of the target Gaussians (in normalized units)
         fwhm - Full-width-half-maximum for the drawn Gaussians, which can be thought of as a radius.
     '''
-    gauss = _make_gaussians(centres, tf.shape(heatmaps)[1], tf.shape(heatmaps)[2], fwhm)
+    gauss = _make_gaussians(centres, tf.shape(input=heatmaps)[1], tf.shape(input=heatmaps)[2], fwhm)
     divergences = _js_2d(heatmaps, gauss)
-    return tf.reduce_mean(divergences)
+    return tf.reduce_mean(input_tensor=divergences)
 
 
 def _normalise_heatmap(inputs, method='softmax'):
@@ -58,10 +58,10 @@ def _normalise_heatmap(inputs, method='softmax'):
         method - A string representing the normalisation method. One of those shown below
     '''
     # Remove the final dimension as it's of size 1
-    inputs = tf.reshape(inputs, tf.shape(inputs)[:3])
+    inputs = tf.reshape(inputs, tf.shape(input=inputs)[:3])
 
     # Normalise the values such that the values sum to one for each heatmap
-    normalise = lambda x: tf.div(x, tf.reshape(tf.reduce_sum(x, [1, 2]), [2, 1, 1]))
+    normalise = lambda x: tf.compat.v1.div(x, tf.reshape(tf.reduce_sum(input_tensor=x, axis=[1, 2]), [2, 1, 1]))
 
     # Perform rectification
     if method == 'softmax':
@@ -81,8 +81,8 @@ def _normalise_heatmap(inputs, method='softmax'):
     return inputs
 
 def _kl_2d(p, q, eps=24):
-    unsummed_kl = p * (tf.log(p + eps) - tf.log(q + eps))
-    kl_values = tf.reduce_sum(unsummed_kl, [-1, -2])
+    unsummed_kl = p * (tf.math.log(p + eps) - tf.math.log(q + eps))
+    kl_values = tf.reduce_sum(input_tensor=unsummed_kl, axis=[-1, -2])
     return kl_values
 
 def _js_2d(p, q, eps=1e-24):
@@ -97,9 +97,9 @@ def _softmax2d(target, axes):
         targets - The tensor on which to apply softmax
         axes - An integer or list of integers across which to apply softmax
     '''
-    max_axis = tf.reduce_max(target, axes, keepdims=True)
+    max_axis = tf.reduce_max(input_tensor=target, axis=axes, keepdims=True)
     target_exp = tf.exp(target-max_axis)
-    normalize = tf.reduce_sum(target_exp, axes, keepdims=True)
+    normalize = tf.reduce_sum(input_tensor=target_exp, axis=axes, keepdims=True)
     softmax = target_exp / normalize
     return softmax
 
@@ -115,14 +115,14 @@ def _make_gaussian(size, centre, fwhm=1):
         centre = [centre[0] * tf.cast(size[1], tf.float32), 
                   centre[1] * tf.cast(size[0], tf.float32)]
         # Find the largest side, as we build a square and crop to desired size
-        square_size = tf.cast(tf.reduce_max(size), tf.float32)
+        square_size = tf.cast(tf.reduce_max(input_tensor=size), tf.float32)
 
         x = tf.range(0, square_size, 1, dtype=tf.float32)
         y = x[:,tf.newaxis]
         x0 = centre[0] - 0.5
         y0 = centre[1] - 0.5
-        unnorm = tf.exp(-4*tf.log(2.) * ((x-x0)**2 + (y-y0)**2) / fwhm**2)[:size[0],:size[1]]
-        norm = unnorm / tf.reduce_sum(unnorm)
+        unnorm = tf.exp(-4*tf.math.log(2.) * ((x-x0)**2 + (y-y0)**2) / fwhm**2)[:size[0],:size[1]]
+        norm = unnorm / tf.reduce_sum(input_tensor=unnorm)
         return norm
 
 def _make_gaussians(centres_in, height, width, fwhm=1):
@@ -136,7 +136,7 @@ def _make_gaussians(centres_in, height, width, fwhm=1):
         fwhm - Full-width-half-maximum, which can be thought of as a radius.
     '''
     def cond(centres, heatmaps):
-        return tf.greater(tf.shape(centres)[0], 0)
+        return tf.greater(tf.shape(input=centres)[0], 0)
     
     def body(centres, heatmaps):
         curr = centres[0]
@@ -148,9 +148,9 @@ def _make_gaussians(centres_in, height, width, fwhm=1):
         return [centres, heatmaps]
     
     # Produce 1 heatmap per coordinate pair, build a list of heatmaps
-    _, heatmaps_out = tf.while_loop(cond,
-                                    body,
-                                    [centres_in, tf.constant([])],
+    _, heatmaps_out = tf.while_loop(cond=cond,
+                                    body=body,
+                                    loop_vars=[centres_in, tf.constant([])],
                                     shape_invariants=[tf.TensorShape([None, 2]), tf.TensorShape([None])])
     heatmaps_out = tf.reshape(heatmaps_out, [-1, height, width])
     return heatmaps_out

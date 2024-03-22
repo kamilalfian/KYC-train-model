@@ -15,8 +15,8 @@ from PIL import Image, ImageDraw
 def _load_graph(frozen_graph_filename):
     """
     """
-    with tf.gfile.GFile(frozen_graph_filename, "rb") as f:
-        graph_def = tf.GraphDef()
+    with tf.io.gfile.GFile(frozen_graph_filename, "rb") as f:
+        graph_def = tf.compat.v1.GraphDef()
         graph_def.ParseFromString(f.read())
     with tf.Graph().as_default() as graph:
         tf.import_graph_def(graph_def, name="")
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     freeze_file_name = "model/frozen_model.pb"
 
     graph = _load_graph(freeze_file_name)
-    sess = tf.Session(graph=graph)
+    sess = tf.compat.v1.Session(graph=graph)
     inputs = graph.get_tensor_by_name('input:0')
     activation_map = graph.get_tensor_by_name("heats_map_regression/pred_keypoints/BiasAdd:0")
 

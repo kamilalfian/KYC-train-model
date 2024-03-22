@@ -4,14 +4,14 @@ from __future__ import print_function
 
 import functools
 import tensorflow as tf
-
+import tf_slim as slim
 from model.mobilenet import mobilenet_v2
 
 """
 TODO. support more backbone model
 """
 
-slim = tf.contrib.slim
+
 
 _MEAN_RGB = [123.15, 115.90, 103.06]
 
@@ -23,7 +23,7 @@ def _preprocess_subtract_imagenet_mean(inputs):
 
 def _preprocess_zero_mean_unit_range(inputs):
   """Map image values from [0, 255] to [-1, 1]."""
-  return (2.0 / 255.0) * tf.to_float(inputs) - 1.0
+  return (2.0 / 255.0) * tf.cast(inputs, dtype=tf.float32) - 1.0
 
 
 def extract_features(images,
@@ -48,4 +48,3 @@ def extract_features(images,
                                           
     return features
 
-    

@@ -11,7 +11,7 @@ import cv2
 
 from utils.preprocessing import preprocess_image_and_points
 
-flags = tf.app.flags
+flags = tf.compat.v1.app.flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('train_logdir', 'data/train_dir',
@@ -42,12 +42,12 @@ def input_pipeline(split, num_epochs=1):
     batch_size = (FLAGS.train_batch_size if is_training else 1)
     dataset = dataset.shuffle(buffer_size=500).repeat(num_epochs).batch(batch_size)
 
-    iterator = dataset.make_one_shot_iterator()
+    iterator = tf.compat.v1.data.make_one_shot_iterator(dataset)
     return iterator.get_next()
 
 def vis_input_data():
     image, label = input_pipeline("train", num_epochs=1)
-    sess = tf.Session()
+    sess = tf.compat.v1.Session()
     while True:
         img_nd, label_nd = sess.run([image, label])
         img_nd = img_nd[0].astype('uint8')
@@ -66,7 +66,7 @@ def vis_input_data():
         print (label_nd)
 
 if __name__ == "__main__":
-    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
 
     run_config = tf.estimator.RunConfig()\
                     .replace(save_summary_steps=FLAGS.save_summaries_steps)\
@@ -93,9 +93,9 @@ if __name__ == "__main__":
     )
 
     for epoch in range(num_of_training_epochs):
-        tf.logging.info("Starting a training cycle.")
+        tf.compat.v1.logging.info("Starting a training cycle.")
         model.train(input_fn=lambda : input_pipeline('train'))
         lr = params["learning_rate"] * decay_factor
         params.update({"learning_rate" : lr})
-        tf.logging.info("Starting to evaluate.")
+        tf.compat.v1.logging.info("Starting to evaluate.")
         model.evaluate(input_fn=lambda : input_pipeline('eval'))

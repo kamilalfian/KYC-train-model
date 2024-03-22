@@ -74,7 +74,7 @@ def _convert_dataset(dataset_split):
             dataset_split, shard_id, _NUM_SHARDS)
         output_filename = os.path.join(tfrecord_output_dir, shard_filename)
 
-        with tf.python_io.TFRecordWriter(output_filename) as tfrecord_writer:
+        with tf.io.TFRecordWriter(output_filename) as tfrecord_writer:
             start_idx = shard_id * num_per_shard
             end_idx = min((shard_id + 1) * num_per_shard, num_images)
 
@@ -83,7 +83,7 @@ def _convert_dataset(dataset_split):
                     i + 1, num_images, shard_id))
                 sys.stdout.flush()
 
-                image_data = tf.gfile.GFile(image_files[idx_list[i]], 'rb').read()
+                image_data = tf.io.gfile.GFile(image_files[idx_list[i]], 'rb').read()
                 height, width = image_reader.read_image_dims(image_data)
 
                 with open(txt_files[idx_list[i]],'r') as txt_f:
@@ -112,21 +112,21 @@ def main(unused_argv):
 
 def _parse_function(example_proto):
     keys_to_features = {
-        'image/encoded': tf.FixedLenFeature(
+        'image/encoded': tf.io.FixedLenFeature(
             (), tf.string, default_value=''),
-        'image/filename': tf.FixedLenFeature(
+        'image/filename': tf.io.FixedLenFeature(
             (), tf.string, default_value=''),
-        'image/height': tf.FixedLenFeature(
+        'image/height': tf.io.FixedLenFeature(
             (), tf.int64, default_value=0),
-        'image/width': tf.FixedLenFeature(
+        'image/width': tf.io.FixedLenFeature(
             (), tf.int64, default_value=0),
-        'image/points': tf.FixedLenFeature(
+        'image/points': tf.io.FixedLenFeature(
             (8,), tf.int64, default_value=None),
     }
 
-    parsed_features = tf.parse_single_example(example_proto, keys_to_features)
+    parsed_features = tf.io.parse_single_example(serialized=example_proto, features=keys_to_features)
 
-    with tf.variable_scope('decoder'):
+    with tf.compat.v1.variable_scope('decoder'):
         input_image = tf.image.decode_image(parsed_features['image/encoded'], channels=3)
         input_height = parsed_features['image/height']
         input_width = parsed_features['image/width']
@@ -140,9 +140,9 @@ def _parse_function(example_proto):
 def get_dataset_split(split_name):
     dataset_dir = tfrecord_output_dir
     file_pattern = 'train*.tfrecord' if split_name=='train' else 'eval*.tfrecord'
-    filenames = tf.gfile.Glob(os.path.join(dataset_dir, file_pattern))
+    filenames = tf.io.gfile.glob(os.path.join(dataset_dir, file_pattern))
     dataset = tf.data.TFRecordDataset(filenames)
     return dataset.map(_parse_function)
 
 if __name__ == '__main__':
-    tf.app.run()
+    tf.compat.v1.app.run()
